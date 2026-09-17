@@ -331,7 +331,10 @@ body.multiPageMode > section.appPage.pageActive{display:block!important}
 .wordRaceChoices{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:700px;margin:20px auto}.wordRaceChoices button{border:3px solid #11245b;border-radius:15px;background:#fff;padding:15px;font-size:19px;font-weight:1000;cursor:pointer;box-shadow:0 4px 0 #21c9f3}
 @media(max-width:700px){.gameModes{grid-template-columns:1fr}.wordRaceChoices{grid-template-columns:1fr}}
 </style>
-</head><body>
+<style>
+.correctingWordBox{display:none;margin:15px auto 0;max-width:650px;background:white;border:3px dashed #7657ff;border-radius:17px;padding:14px;text-align:center}
+.correctingWordBox .correctIcon{font-size:42px;line-height:1.1}.correctingWordBox .correctLabel{font-size:12px;font-weight:1000;color:#667085;text-transform:uppercase;letter-spacing:.08em;margin-top:4px}.correctingWordBox .correctWord{font-size:28px;font-weight:1000;color:#11245b;text-transform:capitalize;margin-top:4px}.attemptNote{font-size:13px;font-weight:900;color:#7657ff;margin-top:6px}
+</style></head><body>
 <section class="hero appPage pageActive" id="homePage"><div class="schoolTop">Ajyal Al-Mawaheb</div><div class="wowTop">WOW!</div><i class="confetti c1"></i><i class="confetti c2"></i><i class="confetti c3"></i><i class="confetti c4"></i><i class="confetti c5"></i><div class="honey"></div><div class="flight">🐝</div><div class="flight b2">🐝</div>
 <div class="heroInner"><div class="copy"><div class="eyebrow">AJYAL AL-MAWAHEB • 1448</div><h1>READY.<br>SET.<br><em>SPELL!</em></h1>
 <p>The stage is waiting for our spelling champions. Learn the words, follow the rules, and make every letter count.</p>
@@ -666,7 +669,7 @@ function revealPick(){if(currentPick)document.getElementById('pickReveal').inner
     <div class="scrambleWord" id="scrambleLetters">A P P L E</div>
     <input class="spellInput" id="scrambleInput" autocomplete="off" placeholder="Type the correct spelling">
     <div class="practiceActions"><button class="check" onclick="checkScramble()">✓ Check</button><button onclick="hearCurrent('scramble')">🎙️</button><button class="next" onclick="newScramble()">Next →</button></div>
-    <div class="practiceFeedback" id="scrambleFeedback"></div>
+    <div class="practiceFeedback" id="scrambleFeedback"></div><div class="correctingWordBox" id="scrambleCorrection"></div>
    </div>
   </section>
 
@@ -676,7 +679,7 @@ function revealPick(){if(currentPick)document.getElementById('pickReveal').inner
     <button class="listenMic" onclick="hearCurrent('listen')">🎙️</button><br><br>
     <input class="spellInput" id="listenInput" autocomplete="off" placeholder="Type the word you Listen">
     <div class="practiceActions"><button class="check" onclick="checkListen()">✓ Check</button><button class="next" onclick="newListen()">Next →</button></div>
-    <div class="practiceFeedback" id="listenFeedback"></div>
+    <div class="practiceFeedback" id="listenFeedback"></div><div class="correctingWordBox" id="listenCorrection"></div>
    </div>
   </section>
 
@@ -686,7 +689,7 @@ function revealPick(){if(currentPick)document.getElementById('pickReveal').inner
     <div class="pickReveal" id="pickReveal"><div><div class="visual">🐝</div><b>Pick a number to begin!</b></div></div>
     <input class="spellInput" id="pickInput" autocomplete="off" placeholder="Type the spelling to check">
     <div class="practiceActions"><button onclick="hearCurrent('pick')">🎙️ Listen</button><button class="check" onclick="checkPick()">✓ Check</button><button class="next" onclick="revealPick()">👀 Reveal Word</button></div>
-    <div class="practiceFeedback" id="pickFeedback"></div>
+    <div class="practiceFeedback" id="pickFeedback"></div><div class="correctingWordBox" id="pickCorrection"></div>
    </div>
   </section>
  </div>
@@ -755,7 +758,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       <button class="check" onclick="checkGame()" id="checkGameBtn">✓ Check</button>
       <button class="next" onclick="nextGameWord()">Shuffle Next →</button>
     </div>
-    <div class="gameFeedback" id="gameFeedback"></div>
+    <div class="gameFeedback" id="gameFeedback"></div><div class="correctingWordBox" id="gameCorrection"></div>
    </div>
    <div style="margin-top:20px;display:flex;justify-content:center"><div class="gameScore" id="gameScore">Score 0 / 0</div></div>
   </div>
@@ -823,4 +826,26 @@ function makeChoices(){
  opts.forEach(w=>{const b=document.createElement('button');b.textContent=w;b.onclick=()=>{const ok=norm(w)===norm(correct);updateGameScore(ok);if(ok)b.style.outline='5px solid #00a985';else b.style.outline='5px solid #ff4f9a'};box.appendChild(b)});
 }
 </script>
-</body></html>
+<script>
+const tries={scramble:0,listen:0,pick:0,gameBuild:0,gameSound:0,gameChoice:0};
+function clearCorrection(id){const b=document.getElementById(id);if(b){b.style.display='none';b.innerHTML=''}}
+function resetTry(k,id){tries[k]=0;clearCorrection(id)}
+function revealCorrection(id,w){const b=document.getElementById(id);if(!b)return;b.innerHTML='<div class="correctIcon">'+visualFor(w)+'</div><div class="correctLabel">Correcting Word</div><div class="correctWord">'+w+'</div>';b.style.display='block'}
+function fail3(fid,k,cid,w){tries[k]++;const f=document.getElementById(fid);if(tries[k]>=3){f.textContent='❌ Three attempts completed. Here is the correct word.';revealCorrection(cid,w);return true}f.innerHTML='❌ Not correct yet. <span class="attemptNote">Attempt '+tries[k]+' of 3</span>';clearCorrection(cid);return false}
+function win(fid,k,cid,msg){document.getElementById(fid).textContent=msg;tries[k]=0;clearCorrection(cid)}
+
+const ns=window.newScramble;window.newScramble=function(){if(ns)ns();resetTry('scramble','scrambleCorrection')}
+window.checkScramble=function(){let ok=norm(document.getElementById('scrambleInput').value)===norm(currentScramble);scoreTotal++;if(ok){scoreOK++;updateScore();win('scrambleFeedback','scramble','scrambleCorrection','✅ Correct! Great spelling!')}else{updateScore();fail3('scrambleFeedback','scramble','scrambleCorrection',currentScramble)}}
+
+const nl=window.newListen;window.newListen=function(){if(nl)nl();resetTry('listen','listenCorrection')}
+window.checkListen=function(){let ok=norm(document.getElementById('listenInput').value)===norm(currentListen);scoreTotal++;if(ok){scoreOK++;updateScore();win('listenFeedback','listen','listenCorrection','✅ Correct! Great spelling!')}else{updateScore();fail3('listenFeedback','listen','listenCorrection',currentListen)}}
+
+const pw=window.pickWord;window.pickWord=function(i){if(pw)pw(i);resetTry('pick','pickCorrection')}
+window.checkPick=function(){if(!currentPick){document.getElementById('pickFeedback').textContent='🐝 Pick a number first.';return}let ok=norm(document.getElementById('pickInput').value)===norm(currentPick);scoreTotal++;if(ok){scoreOK++;updateScore();win('pickFeedback','pick','pickCorrection','✅ Correct! Great spelling!')}else{updateScore();fail3('pickFeedback','pick','pickCorrection',currentPick)}}
+window.revealPick=function(){if(!currentPick)return;if(tries.pick<3){document.getElementById('pickFeedback').innerHTML='🐝 Try the spelling first. <span class="attemptNote">'+tries.pick+' of 3 attempts used</span>';return}revealCorrection('pickCorrection',currentPick)}
+
+const ng=window.nextGameWord;window.nextGameWord=function(){if(ng)ng();resetTry('gameBuild','gameCorrection');resetTry('gameSound','gameCorrection');resetTry('gameChoice','gameCorrection')}
+window.checkGame=function(){let k,ok;if(gameMode==='build'){k='gameBuild';ok=norm(built)===norm(gameWord.replace(/\s/g,''))}else if(gameMode==='sound'){k='gameSound';ok=norm(document.getElementById('soundGameInput').value)===norm(gameWord)}else return;gameTotal++;if(ok){gameCorrect++;document.getElementById('gameScore').textContent='Score '+gameCorrect+' / '+gameTotal;win('gameFeedback',k,'gameCorrection','✅ Correct! Excellent spelling!')}else{document.getElementById('gameScore').textContent='Score '+gameCorrect+' / '+gameTotal;fail3('gameFeedback',k,'gameCorrection',gameWord)}}
+
+window.makeChoices=function(){const box=document.getElementById('choiceOptions');box.innerHTML='';const correct=gameWord;function wrong(w){if(w.length<3)return w+'e';let a=w.split(''),i=Math.floor(Math.random()*(a.length-1));if(a[i]===' ')i=0;[a[i],a[i+1]]=[a[i+1],a[i]];let z=a.join('');return norm(z)===norm(w)?w+'e':z}let opts=[correct,wrong(correct),wrong(correct+'x').replace(/x$/,'')];const other=gameWords().filter(w=>w!==correct&&Math.abs(w.length-correct.length)<=2);opts.push(other.length?other[Math.floor(Math.random()*other.length)]:correct+'e');opts=shuffledArray([...new Set(opts)]).slice(0,4);if(!opts.includes(correct))opts[0]=correct;opts.forEach(w=>{const b=document.createElement('button');b.textContent=w;b.onclick=()=>{let ok=norm(w)===norm(correct);gameTotal++;if(ok){gameCorrect++;document.getElementById('gameScore').textContent='Score '+gameCorrect+' / '+gameTotal;win('gameFeedback','gameChoice','gameCorrection','✅ Correct! Excellent spelling!')}else{document.getElementById('gameScore').textContent='Score '+gameCorrect+' / '+gameTotal;let done=fail3('gameFeedback','gameChoice','gameCorrection',correct);if(done)[...box.querySelectorAll('button')].forEach(x=>x.disabled=true)}};box.appendChild(b)})}
+</script></body></html>
